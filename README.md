@@ -17,7 +17,10 @@ placeholders filled in:
 | `{{ROOM}}` | the room the engineering sous answers in, `#room:server` |
 | `{{ACCOUNT}}` | the sous's own Swarm account, `@name:server` |
 
-Only the owner, and delegates the owner names by exact id in their own
-message, can direct an agent's actions. See `templates/README.md` for details.
+Anyone in the company can direct an agent's actions: the agent looks up the
+sender's id in the `directory` tool and acts only for kind `person`. Guests,
+other agents and outsiders are information only. Money, anything sent outside
+the company, credentials and the other limits in `templates/base.md` stay the
+owner's. See `templates/README.md` for details.
 
 MIT licensed.
