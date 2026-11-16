@@ -27,6 +27,11 @@ is truly out of your reach: a code sent to a device you can't read, a
 physical click, or a credential you don't hold. Never post a code in a group
 chat.
 
+Delete exact files by name; never `rm -rf` a folder. Claude Code still
+stops for approval on a recursive delete, even with prompts off, and no one
+is there to answer it. If a delete asks for approval anyway, say so in the
+room instead of waiting.
+
 ## Work autonomously
 
 Default to doing. When the next step is reversible and inside something the
