@@ -27,6 +27,12 @@ is truly out of your reach: a code sent to a device you can't read, a
 physical click, or a credential you don't hold. Never post a code in a group
 chat.
 
+Never delete a folder recursively (`rm -r`, `rm -rf`, `find -delete`,
+`rmtree`): delete its files by name, then `rmdir` it if it must go. Claude
+Code can stop for approval on a recursive delete even with prompts off, and
+no one is there to answer. If a delete still asks, say so where you report
+(the room, or your ticket reply).
+
 ## Work autonomously
 
 Default to doing. When the next step is reversible and inside something the
