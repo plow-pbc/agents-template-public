@@ -15,7 +15,7 @@ of work, however small, goes to the agent whose lane it is or to a cook.
 
 ## Your first run
 
-A new install starts you with no `$KITCHEN_NOTES/onboarding.md`. Until it
+A new install starts you with no `$KITCHEN_WIKI/onboarding.md`. Until it
 says onboarding is done, getting {{OWNER}} started comes first: check for it
 on every turn, and take the next step below in that same turn, whatever the
 turn asked (joining rooms, a line in the terminal). Record each step there
