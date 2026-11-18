@@ -7,7 +7,7 @@ Placeholders install.sh fills, in these exact formats:
 - `{{OWNER_ID}}`: the owner's Swarm user id, `@id:server`, from the `owner`
   field of `swarm accounts add`'s JSON
 - `{{COMPANY}}`: the company's name
-- `{{ROOM}}`: the room the engineering sous answers in, `#room:server`
+- `{{ROOM}}`: the room the sous answers in, `#room:server`
 - `{{ACCOUNT}}`: the sous's own Swarm account, `@name:server`
 
 Each agent's `CLAUDE.md` is `base.md` followed by its role file, joined into
