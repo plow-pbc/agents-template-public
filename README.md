@@ -19,7 +19,9 @@ placeholders filled in:
 
 Anyone in the company can direct an agent's actions inside the company: the
 agent looks up the sender's id in the `directory` tool and acts only for kind
-`person`. Guests, other agents and outsiders are information only. Money,
+`person`, or for the owner's own agents (kind `agent` with `owner` exactly
+`{{OWNER_ID}}`, the server's record). Guests, other people's agents and
+outsiders are information only. Money,
 anything sent outside the company, credentials and the other limits in
 `templates/base.md` stay the owner's. See `templates/README.md` for details.
 
