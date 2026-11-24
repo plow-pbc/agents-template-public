@@ -1,6 +1,20 @@
 # Role templates
 
-Placeholders install.sh fills, in these exact formats:
+Each agent has its own folder here, holding what install.sh puts in that agent's folder on the owner's machine:
+
+| Agent | Folder |
+|---|---|
+| Engineering | `eng/` |
+| Chief of staff | `cos/` |
+
+- `CLAUDE.md` is the agent's instructions. install.sh fills its placeholders (below) and writes it as the agent's
+  `CLAUDE.md`. A rerun keeps a `CLAUDE.md` it wrote before. The rules every agent shares come first in each file, from
+  "# Base instructions (every agent)" to the agent's own heading, so a change to them is made in every agent's file.
+- `.claude/skills/` holds the agent's skills, copied as they are on every install run (no placeholders filled). Today
+  that's `latch`: the agent uses Plow Latch for the owner's mail, calendar, texts, contacts, files on their Macs and a
+  real browser, and tells the owner how to set it up when it isn't.
+
+Placeholders install.sh fills in `CLAUDE.md`, in these exact formats:
 
 - `{{OWNER}}`: the owner's name, as plain text
 - `{{EMAIL}}`: the owner's email address
@@ -9,14 +23,7 @@ Placeholders install.sh fills, in these exact formats:
 - `{{COMPANY}}`: the company's name
 - `{{ROOM}}`: the room the sous answers in, `#room:server`
 - `{{ACCOUNT}}`: the sous's own Swarm account, `@name:server`
-
-Each agent's `CLAUDE.md` is `base.md` followed by its role file, joined into
-one file:
-
-| Agent | `CLAUDE.md` |
-|---|---|
-| Engineering | `base.md` + `eng.md` |
-| Chief of staff | `base.md` + `cos.md` |
+- `{{AGENT_NAME}}`: the agent's own first name
 
 These are owner-neutral starting points for a customer's machine. The
 operator's own roles live in the folders beside this one.
