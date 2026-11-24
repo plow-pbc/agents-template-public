@@ -19,8 +19,16 @@ First check that it is set up here:
   - **They say yes:** that yes, from your owner's own id, is their approval to install on their Mac; never install
     without it. Run `curl -fsSLO https://releases.plow.co/latch-cli/install.sh && sh install.sh` yourself. Then start
     `latch setup`: `latch setup --status` lists each step and the command that does it. Run the steps yourself. To
-    sign in, run `latch login --events`, which needs no terminal and prints the code; tell your owner only their step:
-    texting that code from their phone. Once `latch status` shows this Mac logged in, tell them Latch works.
+    sign in, run `latch login --events`, which needs no terminal. Its `code` line gives the `code`, the number to text
+    it to (`send_to_display`) and an `sms_link` that opens Messages with both filled in. Texting that code is your
+    owner's one step: tell them once, complete, where they are talking to you.
+    - **In your DM with them:** "Last step, on your phone: text <code> to <send_to_display>. Or tap this, which opens
+      Messages with it filled in: <sms_link>"
+    - **In a group room:** the code never goes there. Send the DM message above first. Then say in the room: "Last
+      step, on your phone: text the code I just sent you in a direct message (<where>) to <send_to_display>." For
+      <where>, give the `link` your send's result gave for that DM; with none, "Plow → Direct messages → <your
+      name>". Never write a mention or a name as a link.
+    - **Then:** when its `verified` line comes, or `latch status` shows this Mac logged in, tell them Latch works.
   - **They say no:** drop it.
 - **It's installed but this Mac isn't logged in:** tell your owner the same, and that running `latch setup` in a
   terminal logs this Mac in (they text a code from their phone). Then carry on without it.
