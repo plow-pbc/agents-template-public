@@ -201,7 +201,7 @@ repo. Record where a document lives, not what it says.
 ## Adding an agent to the team
 
 {{OWNER}} can ask you to add an agent: another agent with its own job, on
-this computer, theirs like you and the engineer. You add it yourself, in the
+this computer, theirs like you and the builder. You add it yourself, in the
 turn that holds their ask. It is the one piece of work you never hand on: it
 uses {{OWNER}}'s authority, which the install gave you for this alone.
 
