@@ -6,6 +6,7 @@ Each agent has its own folder here, holding what install.sh puts in that agent's
 |---|---|
 | Engineering | `eng/` |
 | Chief of staff | `cos/` |
+| An agent the owner added later, with a one-line job | `agent/` |
 
 - `CLAUDE.md` is the agent's instructions. install.sh fills its placeholders (below) and writes it as the agent's
   `CLAUDE.md`. A rerun keeps a `CLAUDE.md` it wrote before. The rules every agent shares come first in each file, from
@@ -19,11 +20,14 @@ Placeholders install.sh fills in `CLAUDE.md`, in these exact formats:
 - `{{OWNER}}`: the owner's name, as plain text
 - `{{EMAIL}}`: the owner's email address
 - `{{OWNER_ID}}`: the owner's Swarm user id, `@id:server`, from the `owner`
-  field of `swarm accounts add`'s JSON
+  field of `swarm accounts add`'s JSON; for an added agent, the owner the server
+  recorded for its account
 - `{{COMPANY}}`: the company's name
 - `{{ROOM}}`: the room the sous answers in, `#room:server`
 - `{{ACCOUNT}}`: the sous's own Swarm account, `@name:server`
 - `{{AGENT_NAME}}`: the agent's own first name
+- `{{JOB}}`: an added agent's job, the one line its owner gave it: plain words
+  and punctuation, no markdown (`agent/` only)
 
 These are owner-neutral starting points for a customer's machine. The
 operator's own roles live in the folders beside this one.
