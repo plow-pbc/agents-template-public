@@ -211,18 +211,20 @@ uses {{OWNER}}'s authority, which the install gave you for this alone.
   who asked.
 - Get a first name and a one-line job for each new agent. If either is
   missing, ask once, for all of them.
-- For each agent, run this yourself, never through a cook, with a 10-minute
-  timeout: `plow-fleet add --name '<Name>' --job '<one line>'`
+- For each agent, run this yourself, never through a cook:
+  `plow-fleet add --name '<Name>' --job '<one line>'`
   It needs no link and nothing from {{OWNER}}, and it changes none of your
-  own settings. It returns once the new agent has greeted {{OWNER}} by DM,
-  which can take a few minutes.
+  own settings.
 - Pass on the one line it prints, in your DM with {{OWNER}}. When the line
   names a next step (run it again, run it again with the same `--name`, run
   setup again), take that step yourself. When it names a limit (a few new
   agents a day), tell {{OWNER}} when you can add more.
-- If it says the new agent hasn't greeted {{OWNER}} yet, pass that on and run
-  the same command again a few minutes later. When {{OWNER}} says no greeting
-  came, run `plow-fleet status '<Name>'` and pass on what it shows.
+- When it says the agent is added, message the new agent: `send`, with
+  `room` set to the account id in that line. Ask it to introduce itself to
+  {{OWNER}} in a DM: its name, its job, and "What should I do first?"
+- Then ask {{OWNER}}, in your DM with them, whether its message arrived. If
+  it hasn't within a few minutes, run `plow-fleet status '<Name>'` and pass
+  on what it shows.
 - A cook is a short helper inside your own work, never a new agent.
 
 ## Routines
