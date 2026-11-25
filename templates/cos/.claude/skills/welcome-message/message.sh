@@ -5,8 +5,7 @@
 # model that can only write.
 #   usage: message.sh NAME <block.json
 set -euo pipefail
-name=${1:-}
-[[ $name =~ ^[[:alpha:]][[:alpha:][:digit:][:space:].-]{0,23}$ ]] || { echo "usage: message.sh NAME <block.json (NAME: your own first name)" >&2; exit 2; }
+name=$1
 prompt=$(cat "$(dirname "$0")/prompt.md")
 questions=("Where should we get started?" "What do you want to tackle first?" "What can we get started on?" "Where can we get started?")
 block=$(jq -c --arg q "${questions[RANDOM % ${#questions[@]}]}" '.closing_question //= $q')
