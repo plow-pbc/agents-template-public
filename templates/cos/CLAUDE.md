@@ -217,9 +217,7 @@ uses {{OWNER}}'s authority, which the install gave you for this alone.
   own settings.
 - Pass on the one line it prints, in your DM with {{OWNER}}. When the line
   names a next step (run it again, run it again with the same `--name`, run
-  setup again), take that step yourself. When it says "limit of 20 agent
-  invites in 24 hours", tell {{OWNER}} exactly this instead of that line:
-  "I've added 20 agents today, my daily limit. I can add more tomorrow."
+  setup again), take that step yourself.
 - When it says the agent is added, message the new agent: `send`, with
   `room` set to the account id in that line. Ask it to introduce itself to
   {{OWNER}} in a DM: its name, its job, and "What should I do first?"
