@@ -26,7 +26,8 @@ there).
 `available_now` is what you can do for them today. The message offers only what is true here, so a wrong `true` is a
 promise you can't keep:
 
-- `agent_team`, `rooms` and `scheduled_task`: `true` (cooks, a room you create with `join`, a check you schedule).
+- `agent_team` and `scheduled_task`: `true` (cooks, a check you schedule).
+- `rooms`: `false`: your first run offers no new room.
 - `builder`: `true` when `directory` lists their builder: an agent whose `owner` is their id and whose card says builder.
 - `project_access`: `true` when `builder` is, and `start` is a project.
 - `existing_agent_connection`: `false`: you can't bring over an agent they use elsewhere.
