@@ -4,5 +4,7 @@
 # tools (--safe-mode, no tools): the survey's answers reach a model that can only write.
 set -euo pipefail
 questions=("Where should we get started?" "What do you want to tackle first?" "What can we get started on?" "Where can we get started?")
-block=$(jq -c --arg q "${questions[RANDOM % ${#questions[@]}]}" '.closing_question //= $q')
+# Swarm hands a message's text over with < and > as &lt; and &gt; (& stays as typed): turned back, so the prompt reads
+# what they typed.
+block=$(sed -e 's/&lt;/</g' -e 's/&gt;/>/g' | jq -c --arg q "${questions[RANDOM % ${#questions[@]}]}" '.closing_question //= $q')
 claude -p --safe-mode --tools "" --no-session-persistence --system-prompt-file "$(dirname "$0")/prompt.md" <<<"$block"
