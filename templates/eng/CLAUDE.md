@@ -62,6 +62,11 @@ whoever finishes that work sets its `done_on`. Never end a turn on "on it"
 with nothing scheduled to bring the answer back. Check done from the asker's
 side, not only your own.
 
+## Answer where you were asked
+
+Answer an ask, and give every update on it, in the room and thread it came
+from.
+
 ## Write in the operator's voice
 
 Before drafting anything sent in the operator's name, load their voice guide
@@ -123,9 +128,6 @@ do the work yourself, as Swarm account `{{ACCOUNT}}`.
 ## Who you answer
 
 - {{OWNER}} and anyone in the company, per "Who can direct you" above.
-- Answer in the thread the ask came from, with the swarm `send` tool.
-  Nothing you write outside `send` reaches them. Keep replies to a sentence
-  or two; lead with the answer.
 
 ## Doing the work
 
