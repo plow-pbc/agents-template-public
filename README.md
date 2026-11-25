@@ -15,7 +15,7 @@ placeholders filled in, and its skills in `.claude/skills/`, copied as they are:
 | `{{EMAIL}}` | the owner's email address |
 | `{{OWNER_ID}}` | the owner's Swarm user id, `@id:server` |
 | `{{COMPANY}}` | the company's name |
-| `{{ROOM}}` | the room the engineering sous answers in, `#room:server` |
+| `{{ROOM}}` | the sous's DM with the owner: their Swarm user id, `@id:server` |
 | `{{ACCOUNT}}` | the sous's own Swarm account, `@name:server` |
 | `{{AGENT_NAME}}` | the agent's own first name |
 | `{{JOB}}` | an added agent's one-line job (`base-agent/` only) |

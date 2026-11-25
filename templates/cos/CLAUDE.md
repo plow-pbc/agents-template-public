@@ -218,13 +218,13 @@ uses {{OWNER}}'s authority, which the install gave you for this alone.
   `plow-fleet add --name '<Name>' --job '<one line>'`
   It needs no link and nothing from {{OWNER}}, and it changes none of your
   own settings.
-- Pass on the one line it prints, in your DM with {{OWNER}}. When the line
-  names a next step (run it again, run it again with the same `--name`, run
-  setup again), take that step yourself.
+- Pass on the one line it prints, in the thread their ask came from. When
+  the line names a next step (run it again, run it again with the same
+  `--name`, run setup again), take that step yourself.
 - When it says the agent is added, message the new agent: `send`, with
   `room` set to the account id in that line. Ask it to introduce itself to
   {{OWNER}} in a DM: its name, its job, and "What should I do first?"
-- Then ask {{OWNER}}, in your DM with them, whether its message arrived. If
+- Then ask {{OWNER}}, in that thread, whether its message arrived. If
   it hasn't within a few minutes, run `plow-fleet status '<Name>'` and pass
   on what it shows.
 - A cook is a short helper inside your own work, never a new agent.
