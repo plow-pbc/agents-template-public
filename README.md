@@ -16,6 +16,7 @@ placeholders filled in, and its skills in `.claude/skills/`, copied as they are:
 | `{{COMPANY}}` | the company's name |
 | `{{ROOM}}` | the room the engineering sous answers in, `#room:server` |
 | `{{ACCOUNT}}` | the sous's own Swarm account, `@name:server` |
+| `{{FIRST_RUN}}` | `survey` or `question`: how the chief of staff's first run starts (`cos/` only) |
 | `{{AGENT_NAME}}` | the agent's own first name |
 
 Anyone in the company can direct an agent's actions inside the company: the
