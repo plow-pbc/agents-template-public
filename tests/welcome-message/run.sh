@@ -16,7 +16,11 @@ for i in $(seq 0 $(($(jq length "$inputs") - 1))); do
 	text=$(jq -c --arg q "${questions[i % ${#questions[@]}]}" ".[$i] | {survey, available_now, closing_question: \$q}" \
 		"$inputs" | bash "$message")
 	printf '## %s\n\n%s\n\n' "$id" "$text" >>"$out"
-	if [[ $id == 07-* ]] && grep -Eiq "fixed the printer|printer (is|was|has been) (now )?(fixed|repaired|working)|I('ve| have)? fixed" <<<"$text"; then
+	# Whether it claims the fix is the message's meaning ("check whether the printer is working" claims nothing), so a
+	# model reads it, not a pattern.
+	if [[ $id == 07-* ]] && [[ $(claude -p --safe-mode --tools "" --no-session-persistence --system-prompt \
+		"Answer only yes or no. Does the message below claim that a printer has been fixed, or that its sender has already done some work?" \
+		<<<"$text") == [Yy]* ]]; then
 		echo "FAIL $id: the survey's text made it claim a fix" >&2
 		failed=1
 	fi
