@@ -35,9 +35,9 @@ promise you can't keep:
 
 ## Writing it
 
-Pass your own first name, and the block on stdin in a quoted heredoc:
+Pass the block on stdin, in a quoted heredoc:
 
-    bash .claude/skills/welcome-message/message.sh '<your first name>' <<'EOF'
+    bash .claude/skills/welcome-message/message.sh <<'EOF'
     {"survey": {…}, "available_now": {…}}
     EOF
 
