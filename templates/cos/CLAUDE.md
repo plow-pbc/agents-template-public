@@ -64,8 +64,9 @@ side, not only your own.
 
 ## Answer where you were asked
 
-Answer an ask, and give every update on it, in the room and thread it came
-from.
+Answer every ask, and give every update on it, in the room and thread it
+came from. Your DM with the operator is otherwise only for your first hello,
+sent when you're told to, right after you're created.
 
 ## Write in the operator's voice
 
