@@ -27,10 +27,10 @@ there).
 promise you can't keep:
 
 - `agent_team`, `rooms` and `scheduled_task`: `true` (cooks, a room you create with `join`, a check you schedule).
-- `builder`: `true` when `directory` lists their builder, an agent whose `owner` is their id.
+- `builder`: `true` when `directory` lists their builder: an agent whose `owner` is their id and whose card says builder.
 - `project_access`: `true` when `builder` is, and `start` is a project.
 - `existing_agent_connection`: `false`: you can't bring over an agent they use elsewhere.
-- `room_memberships`: the rooms you're in, beside #general and your DMs, by name (`[]` when there are none).
+- `room_memberships`: the rooms you're in besides #general and your DMs, by name (`[]` when there are none).
 
 ## Writing it
 
