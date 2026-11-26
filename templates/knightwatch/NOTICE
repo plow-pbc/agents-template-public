@@ -1,0 +1,7 @@
+The review method in .claude/skills/knightwatch-review/ and .claude/agents/ is adapted from knightwatch-reviewer
+(https://github.com/plow-pbc/knightwatch-reviewer), licensed under the Apache License, Version 2.0. Its NOTICE:
+
+knightwatch-reviewer
+Copyright 2026 The Plow Collective, Inc
+
+This product includes software developed at The Plow Collective, Inc (https://plow.co).
