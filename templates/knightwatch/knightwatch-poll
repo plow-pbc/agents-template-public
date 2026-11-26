@@ -170,7 +170,16 @@ class Poller:
     def clear_knightwatch(self):
         k = self.cfg["knightwatch"]
         self.kitchen("--kitchen-id", k, "type", "--expect", "❯", "sous", "/clear")
-        self.kitchen("--kitchen-id", k, "press", "--expect", "/clear", "sous", "Enter")
+        for _ in range(10):   # the typed text takes a moment to show on the screen
+            time.sleep(1)
+            try:
+                self.kitchen("--kitchen-id", k, "press", "--expect", "❯ /clear", "sous", "Enter")
+                break
+            except RuntimeError as e:
+                if "STALE_SCREEN" not in str(e):
+                    raise
+        else:
+            raise RuntimeError("/clear did not show in Knightwatch's prompt")
         for _ in range(30):
             time.sleep(2)
             if self.knightwatch_idle():
