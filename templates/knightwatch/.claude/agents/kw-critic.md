@@ -33,7 +33,11 @@ Then apply these, in order:
    unless they remove a security or data-integrity control.
 3. **Intent cap.** A true probe whose remedy adds a guard, check or fallback that restricts the inferred intent, or
    defends a case the operating point doesn't have: `yes` with `Severity if yes: low`, and say so in Evidence.
-4. **Severity.** With `yes`, override `Severity if yes` only when your evidence changes it.
+4. **Severity.** With `yes`, set `Severity if yes` from the outcome your evidence shows, up or down. Raise it to
+   `blocking` when the evidence shows a wrong outcome with today's inputs (lost or wrong data, crash or hang, failed
+   build or boot, a documented promise broken, failure reported as success, or the failure the PR sets out to fix),
+   even if the specialist filed it as low, shape, docs or copy. An uncommon but reachable input, a default deployment
+   that avoids it, or the same flaw on the base branch doesn't lower it.
 
 Write exactly this to your notes file:
 

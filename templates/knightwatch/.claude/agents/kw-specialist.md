@@ -73,8 +73,15 @@ With nothing to report, write `No probes.` then the Surveyed section.
 Classes and severities:
 - `bug`: a wrong outcome. **Blocking** when you cite the failing path and it happens with today's inputs: lost,
   wrong or corrupted data (totals, counts, dates), a crash or hang, a build, boot or install that fails, a documented
-  or promised behavior that doesn't happen, or a failure reported as success. Small scale or an uncommon but
-  reachable input doesn't lower it. Medium for hardening, or a trigger you can't cite.
+  or promised behavior that doesn't happen, a failure reported as success, or the very failure the PR sets out to
+  fix. Medium only for hardening, or a trigger you can't cite. None of these lower it:
+  - the input is uncommon but reachable: a typo'd or missing config value, a host outside UTC, a busy chat, an odd
+    name in user data, two requests at once, a stream closed early;
+  - the default deployment happens to avoid it;
+  - the base branch had the same flaw, when the PR touches that path or claims to fix it;
+  - you found it as duplication, drift, docs or copy. When the code's actual behavior is the wrong outcome (a copied
+    write that lost its queue or lock, help text promising an exit code the code never returns), file it as the `bug`
+    and state the outcome; fixing only the text is not the remedy.
 - `bypass`: the PR goes around a canonical seam the repo already has (instance 1). Blocking.
 - `shape`: a second instance of a missing pattern, or a layering problem. Medium; blocking only for hard lock-in.
 - `simplification`: removal-shaped (delete, collapse, cut). Blocking for a stale caller, an unreachable bad path, a

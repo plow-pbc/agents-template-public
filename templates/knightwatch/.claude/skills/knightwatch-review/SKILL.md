@@ -63,15 +63,18 @@ Check each probe and write your answers to the notes file.
 Read every `notes/<angle>.md` with its `notes/critic-<angle>.md`.
 
 1. **Apply the critic's answers:** `yes` → a stated finding; `unknown` → an open question; `no` → dropped. Don't
-   rubber-stamp: if a `no` isn't backed by its evidence, keep the probe at the specialist's severity. A cited wrong
-   outcome with today's inputs (lost or wrong data, crash, failed build or boot, broken documented promise, failure
-   reported as success) stays `blocking`.
-2. **Merge across angles.** Two angles flagging one root cause become one probe, credited to the angle with the most
-   concrete failing path.
+   rubber-stamp: if a `no` isn't backed by its evidence, keep the probe at the specialist's severity. Severity follows
+   the outcome, by the `bug` rule in the specialists' rubric: a confirmed probe whose evidence shows a wrong outcome
+   today (lost or wrong data, crash, failed build or boot, broken documented promise, failure reported as success, or
+   the failure the PR sets out to fix) is `blocking`, whatever severity the specialist or critic gave it.
+2. **Merge across angles** only probes with the same failing path and the same outcome, credited to the angle with
+   the most concrete failing path. Probes that share lines or a fix but cause different outcomes stay separate lines.
+   A merged line states every outcome it absorbs, keeps all their Files and takes the highest severity.
 3. **Screen the skipped angles.** Read the diff once through each skipped angle; add a probe only if it would be
    blocking and you can cite `path:line`, tagged `screened-<angle>`.
-4. **Drop padding.** Hypothetical concerns whose remedy is permanent scaffolding go. Removal-shaped findings
-   (duplication, dead code, over-engineering) stay at their severity. Drop nits when there are 3 or more stronger probes.
+4. **Drop padding.** Only `unknown` probes can be dropped: a hypothetical concern whose remedy is permanent
+   scaffolding. A `yes` probe is never dropped; a confirmed low or nit still gets its line. Removal-shaped findings
+   (duplication, dead code, over-engineering) stay at their severity.
 5. **Rank:**
    1. yes + blocking (bug, then bypass, then shape, then simplification);
    2. yes + medium;
@@ -80,8 +83,11 @@ Read every `notes/<angle>.md` with its `notes/critic-<angle>.md`.
 
    Within a band: a stale caller and a bypassed seam come first, then broad correctness, then local fixes.
 6. **Too big to review:** 5 or more blocking findings, or 8 or more blocking+medium findings across subsystems, or a
-   large diff of separable concerns. Say so in the Overview, sketch a split into smaller PRs, and keep only the 3 most
-   structural probes.
+   large diff of separable concerns. Say so in the Overview, sketch a split into smaller PRs, and put the 3 most
+   structural probes first.
+7. **Check coverage before writing.** List every `yes` and `unknown` probe in the critic files. Each must appear in
+   **Probes**, as its own line or named in a merged line, unless it is an `unknown` dropped as padding. Add any that
+   doesn't.
 
 ## 6. Verdict
 
