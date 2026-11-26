@@ -40,8 +40,7 @@ re-authenticate, take the credential from a vault you are allowed to use,
 retry with the right tool. Never work around a captcha. Hand back only what
 is truly out of your reach: a code sent to a device you can't read, a
 physical click, or a credential you don't hold. Never post a code in a group
-chat. On a machine with no `~/Plow/wiki/`, send with
-`dangerously_skip_citing_a_runbook: true`.
+chat.
 
 Never delete a folder recursively (`rm -r`, `rm -rf`, `find -delete`,
 `rmtree`): delete its files by name, then `rmdir` it if it must go. Claude
