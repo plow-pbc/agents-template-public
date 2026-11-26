@@ -13,7 +13,7 @@ Config, state and log: ~/.local/share/knightwatch/<company>/. --dry-run posts no
 goes to dry-run/ there.
 
 A review ticket's files go in tickets/<id>/: ticket.json, diff.patch, base/ (the whole repo at the merge base, read-only;
-a repo over MAX_TREE bytes gets no review), head/ (each changed file at the head), and config/ (REVIEW.md and .knightwatch/ from the base
+when it can't be copied whole there is no review, only a reply saying so), head/ (each changed file at the head), and config/ (REVIEW.md and .knightwatch/ from the base
 branch's tip). current.json (mode 600) holds
 {"ticket": id, "folder": path} while a review runs and {} otherwise. Knightwatch writes tickets/<id>/review.md:
 
@@ -68,6 +68,10 @@ query($q: String!, $after: String) {
 
 class NotFound(RuntimeError):
     pass
+
+
+class TreeError(RuntimeError):
+    """The base tree could not be copied whole."""
 
 
 def now_iso():
@@ -298,6 +302,14 @@ class Poller:
             req["access"] = access
             try:
                 self.start(req)
+            except TreeError as e:
+                self.state["queue"].pop(0)
+                self.log("%s: %s: no review" % (key, e))
+                try:
+                    self.post(req["repo"], req["pr"], TREE_TEXT)
+                except RuntimeError as e:
+                    self.log("tree reply %s: %s" % (key, e))
+                continue
             except Exception as e:
                 req["tries"] += 1
                 self.log("ticket %s: %s (try %d of %d)" % (key, e, req["tries"], SEND_TRIES))
@@ -371,7 +383,7 @@ class Poller:
                         continue
                     total += m.size
                     if total > MAX_TREE:
-                        raise RuntimeError("%s at %s has over %d MB of files" % (repo, sha[:7], MAX_TREE >> 20))
+                        raise TreeError("%s at %s has over %d MB of files" % (repo, sha[:7], MAX_TREE >> 20))
                     dest = inside(root, path)
                     dest.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
                     with tar.extractfile(m) as src, open(str(dest), "wb") as out:
@@ -379,11 +391,11 @@ class Poller:
                     os.chmod(str(dest), 0o400)
             proc.stdout.read()
             if proc.wait() != 0:   # a download cut short between two files still reads as a whole archive
-                raise RuntimeError("gh api repos/%s/tarball: %s" % (repo, proc.stderr.read().decode(errors="replace").strip()[:300]))
+                raise TreeError("gh api repos/%s/tarball: %s" % (repo, proc.stderr.read().decode(errors="replace").strip()[:300]))
         except (tarfile.TarError, EOFError) as e:
             if proc.poll() is None:
                 proc.kill()
-            raise RuntimeError("gh api repos/%s/tarball: %s %s" % (repo, e, proc.stderr.read().decode(errors="replace").strip()[:300]))
+            raise TreeError("gh api repos/%s/tarball: %s %s" % (repo, e, proc.stderr.read().decode(errors="replace").strip()[:300]))
         finally:
             timer.cancel()
             if proc.poll() is None:
@@ -455,6 +467,8 @@ class Poller:
 
 
 CAP_TEXT = "Knightwatch reviews a PR at most %d times a day. This request was not run." % DAILY_CAP
+TREE_TEXT = ("Knightwatch could not copy this repo's files, so this request was not run. Repos with over %d MB of "
+             "files are not reviewed." % (MAX_TREE >> 20))
 
 
 def requests_in(comments, owner, since, handled):
