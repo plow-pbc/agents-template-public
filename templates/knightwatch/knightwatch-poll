@@ -9,7 +9,6 @@ posts it as one PR comment and tells the builder's kitchen.
     knightwatch-poll disable --company C          launchd stops it and won't start it again
     knightwatch-poll once --company C [--dry-run] one poll
     knightwatch-poll serve --company C            poll forever (what launchd runs)
-    knightwatch-poll status --company C
 
 Config, state and log: ~/.local/share/knightwatch/<company>/. --dry-run posts nothing on GitHub and sends no builder
 notice: what it would post goes to dry-run/ there.
@@ -46,7 +45,6 @@ DAILY_CAP = 5
 VERDICTS = ("APPROVE", "COMMENT")
 PUSH = ("admin", "maintain", "write")
 GH_TIMEOUT = 120
-MAX_COMMENT = 65000
 SEARCH = """
 query($q: String!, $after: String) {
   rateLimit { cost }
@@ -430,8 +428,7 @@ def parse_review(path, ticket):
 
 
 def comment_body(sha, body):
-    text = "<!-- knightwatch reviewed-sha: %s -->\nKnightwatch reviewed `%s`.\n\n%s" % (sha, sha[:7], body)
-    return text if len(text) <= MAX_COMMENT else text[:MAX_COMMENT - 1] + "…"
+    return "<!-- knightwatch reviewed-sha: %s -->\nKnightwatch reviewed `%s`.\n\n%s" % (sha, sha[:7], body)
 
 
 def notice_text(repo, n, verdict, url):
@@ -489,17 +486,6 @@ def disable(company):
     print("disabled %s" % label(company))
 
 
-def status(company):
-    p = Poller(company)
-    hour_ago = time.time() - 3600
-    print("launchd: %s · dry run: %s" % ("enabled" if plist_path(company).exists() else "off", p.dry_run))
-    print("owners: %d · GraphQL points in the last hour: %d of %d" % (
-        len(p.state.get("owners", [])), sum(x[1] for x in p.state["points"] if x[0] > hour_ago), POINTS_PER_HOUR))
-    cur = p.state.get("current")
-    print("reviewing: %s" % ("%s %s#%d" % (cur["id"], cur["repo"], cur["pr"]) if cur else "nothing"))
-    print("waiting: %d" % len(p.state["queue"]))
-
-
 def serve(company):
     p = Poller(company)
     p.log("serve: every %ds for %s" % (INTERVAL, p.cfg["owner"]))
@@ -539,8 +525,6 @@ def main(argv):
         p.save()
     elif cmd == "serve":
         serve(company)
-    elif cmd == "status":
-        status(company)
     else:
         print(__doc__)
         return 2

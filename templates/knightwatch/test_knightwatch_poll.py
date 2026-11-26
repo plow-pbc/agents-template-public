@@ -58,7 +58,6 @@ class Review(unittest.TestCase):
     def test_comment_carries_the_reviewed_sha(self):
         body = kw.comment_body("a" * 40, "text")
         self.assertTrue(body.startswith("<!-- knightwatch reviewed-sha: %s -->\n" % ("a" * 40)))
-        self.assertLessEqual(len(kw.comment_body("a" * 40, "x" * 70000)), kw.MAX_COMMENT)
 
 
 class Folder(unittest.TestCase):
