@@ -37,9 +37,9 @@ HERE = Path(__file__).resolve().parent
 INTERVAL = 120
 OWNERS_EVERY = 3600
 # GraphQL budget. The owner's login has 5,000 points an hour, shared with everything else that uses it. One search
-# page (100 PRs, each with its last 100 comments) costs 1 point, so a poll costs about one point per owner, plus one
-# per further 100 open PRs: 26 owners every 2 minutes is about 810 points an hour. A poll that would take the last
-# hour's spend past this budget is skipped.
+# page (up to 100 PRs, each with its last 100 comments) costs 1 point, so a poll costs one point per owner plus one
+# per further 100 open PRs, and polls run 20 to 30 times an hour. A poll that would take the last hour's spend past
+# this budget is skipped.
 POINTS_PER_HOUR = 1000
 SEND_TRIES = 5
 DAILY_CAP = 5
@@ -162,9 +162,9 @@ class Poller:
         if r.returncode != 0:
             raise RuntimeError("kitchen %s: %s" % (" ".join(args[:3]), (r.stderr or r.stdout).strip()[:300]))
         try:
-            return json.loads(r.stdout or "null")
+            return json.loads(r.stdout)
         except ValueError:
-            return r.stdout
+            raise RuntimeError("kitchen %s: not JSON: %s" % (" ".join(args[:3]), r.stdout.strip()[:300]))
 
     def knightwatch_idle(self):
         peek = self.kitchen("--kitchen-id", self.cfg["knightwatch"], "peek", "sous")
@@ -280,6 +280,7 @@ class Poller:
             except RuntimeError as e:
                 self.log("Knightwatch's kitchen: %s" % e)
                 return
+            req["access"] = access
             try:
                 self.start(req)
             except Exception as e:
@@ -321,7 +322,8 @@ class Poller:
         if not day or day["day"] != today:
             day = self.state["started"][key] = {"day": today, "count": 0}
         day["count"] += 1
-        self.log("%s: ticket %s (kitchen %s) for %s at %s" % (key, cur["id"], cur["kitchen_ticket"], req["url"], cur["sha"][:7]))
+        self.log("%s: ticket %s (kitchen ticket %s) for %s (%s access) at %s" % (
+            key, cur["id"], cur["kitchen_ticket"], req["url"], req["access"], cur["sha"][:7]))
 
     def fetch(self, cur, folder):
         repo, n = cur["repo"], cur["pr"]

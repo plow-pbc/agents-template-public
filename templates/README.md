@@ -29,5 +29,8 @@ Placeholders install.sh fills in `CLAUDE.md`, in these exact formats:
 - `{{JOB}}`: an added agent's job, the one line its owner gave it: plain words
   and punctuation, no markdown (`base-agent/` only)
 
+`knightwatch/knightwatch-poll.plist` is the poller's LaunchAgent: `knightwatch-poll enable` fills its placeholders,
+not install.sh.
+
 These are owner-neutral starting points for a customer's machine. The
 operator's own roles live in the folders beside this one.
