@@ -19,7 +19,7 @@ def comment(body, id=1, type="User", created="2026-11-26T13:00:00Z"):
 
 
 class Requests(unittest.TestCase):
-    def test_only_the_exact_command_by_a_user_since_the_first_poll(self):
+    def test_only_the_exact_unhandled_command_by_a_user_since_the_first_poll(self):
         comments = [
             comment("/owner-review", 1),
             comment("  /owner-review\n", 2),
@@ -30,11 +30,9 @@ class Requests(unittest.TestCase):
             comment("/Owner-review", 7),
             comment("/owner-review", 8, type="Bot"),
             comment("/owner-review", 9, created="2026-11-26T11:59:59Z"),
+            comment("/owner-review", 10),
         ]
-        self.assertEqual([c["id"] for c in kw.requests_in(comments, "owner", SINCE, [])], [1, 2])
-
-    def test_a_handled_comment_never_comes_back(self):
-        self.assertEqual(kw.requests_in([comment("/owner-review", 1)], "owner", SINCE, [1]), [])
+        self.assertEqual([c["id"] for c in kw.requests_in(comments, "owner", SINCE, [10])], [1, 2])
 
 
 class Review(unittest.TestCase):
@@ -81,8 +79,24 @@ class Folder(unittest.TestCase):
             self.assertEqual((Path(d) / "current.json").read_text(), "{}")
             self.assertEqual(os.stat(Path(d) / "current.json").st_mode & 0o777, 0o600)
             self.assertIsNone(p.state["current"])
-            (Path(d) / "current.json").unlink()
+            for name in ("current.json", "state.json"):
+                (Path(d) / name).unlink()
             (Path(d) / "tickets").rmdir()
+
+    def test_a_review_that_could_not_be_posted_is_kept(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = kw.Poller.__new__(kw.Poller)
+            p.home, p.state = Path(d), {"current": {}}
+            review = Path(d) / "tickets" / "kw-1" / "review.md"
+            review.parent.mkdir(parents=True)
+            review.write_text("x")
+            p.end({"folder": str(review.parent)}, keep=True)
+            self.assertEqual(review.read_text(), "x")
+            self.assertEqual((Path(d) / "current.json").read_text(), "{}")
+            for path in (review, Path(d) / "current.json", Path(d) / "state.json"):
+                path.unlink()
+            review.parent.rmdir()
+            review.parent.parent.rmdir()
 
 
 if __name__ == "__main__":
