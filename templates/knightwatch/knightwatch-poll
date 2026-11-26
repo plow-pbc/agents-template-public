@@ -13,7 +13,7 @@ Config, state and log: ~/.local/share/knightwatch/<company>/. --dry-run posts no
 goes to dry-run/ there.
 
 A review ticket's files go in tickets/<id>/: ticket.json, diff.patch, base/ (the whole repo at the merge base, read-only;
-when it can't be copied whole there is no review, only a reply saying so), head/ (each changed file at the head), and config/ (REVIEW.md and .knightwatch/ from the base
+a repo with over MAX_TREE bytes of files gets no review, only a reply saying so), head/ (each changed file at the head), and config/ (REVIEW.md and .knightwatch/ from the base
 branch's tip). current.json (mode 600) holds
 {"ticket": id, "folder": path} while a review runs and {} otherwise. Knightwatch writes tickets/<id>/review.md:
 
@@ -48,7 +48,7 @@ DAILY_CAP = 5
 VERDICTS = ("approve", "approve-with-nits", "blocking", "comment")
 PUSH = ("admin", "maintain", "write")
 GH_TIMEOUT = 120
-MAX_TREE = 500 * 2**20       # a base tree with more file data than this fails the ticket
+MAX_TREE = 500 * 2**20
 TARBALL_TIMEOUT = 600
 SEARCH = """
 query($q: String!, $after: String) {
@@ -70,8 +70,8 @@ class NotFound(RuntimeError):
     pass
 
 
-class TreeError(RuntimeError):
-    """The base tree could not be copied whole."""
+class TooLarge(RuntimeError):
+    """The base tree has more than MAX_TREE bytes of files."""
 
 
 def now_iso():
@@ -88,7 +88,8 @@ class Poller:
             self.state = json.loads((self.home / "state.json").read_text())
         except (OSError, ValueError):
             self.state = {}
-        for key, empty in (("handled", []), ("queue", []), ("prs", {}), ("started", {}), ("points", []), ("outbox", [])):
+        for key, empty in (("handled", []), ("queue", []), ("prs", {}), ("started", {}), ("replied", {}), ("points", []),
+                           ("outbox", [])):
             self.state.setdefault(key, empty)
 
     def log(self, msg):
@@ -283,13 +284,11 @@ class Poller:
                 continue
             day = self.state["started"].get(key)
             if day and day["day"] == time.strftime("%Y-%m-%d", time.gmtime()) and day["count"] >= DAILY_CAP:
-                if not day.get("told"):
-                    try:
-                        self.post(req["repo"], req["pr"], CAP_TEXT)
-                    except RuntimeError as e:
-                        self.log("cap reply %s: %s" % (key, e))
-                        return
-                    day["told"] = True
+                try:
+                    self.reply_once(req, "cap", CAP_TEXT)
+                except RuntimeError as e:
+                    self.log("cap reply %s: %s" % (key, e))
+                    return
                 self.state["queue"].pop(0)
                 self.log("%s: %d reviews today already: no review" % (key, DAILY_CAP))
                 continue
@@ -302,13 +301,13 @@ class Poller:
             req["access"] = access
             try:
                 self.start(req)
-            except TreeError as e:
+            except TooLarge as e:   # it won't fit on a retry either
                 self.state["queue"].pop(0)
                 self.log("%s: %s: no review" % (key, e))
                 try:
-                    self.post(req["repo"], req["pr"], TREE_TEXT)
+                    self.reply_once(req, "too-large", TOO_LARGE_TEXT)
                 except RuntimeError as e:
-                    self.log("tree reply %s: %s" % (key, e))
+                    self.log("too-large reply %s: %s" % (key, e))
                 continue
             except Exception as e:
                 req["tries"] += 1
@@ -316,6 +315,13 @@ class Poller:
                 if req["tries"] >= SEND_TRIES:
                     self.state["queue"].pop(0)
                 return
+
+    def reply_once(self, req, kind, text):
+        """Posts text on the request's PR at most once a day per PR for each kind of reply."""
+        key, today = "%s#%d %s" % (req["repo"], req["pr"], kind), time.strftime("%Y-%m-%d", time.gmtime())
+        if self.state["replied"].get(key) != today:
+            self.post(req["repo"], req["pr"], text)
+            self.state["replied"][key] = today
 
     def permission(self, repo, login):
         try:
@@ -383,7 +389,7 @@ class Poller:
                         continue
                     total += m.size
                     if total > MAX_TREE:
-                        raise TreeError("%s at %s has over %d MB of files" % (repo, sha[:7], MAX_TREE >> 20))
+                        raise TooLarge("%s at %s has over %d MB of files" % (repo, sha[:7], MAX_TREE >> 20))
                     dest = inside(root, path)
                     dest.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
                     with tar.extractfile(m) as src, open(str(dest), "wb") as out:
@@ -391,11 +397,11 @@ class Poller:
                     os.chmod(str(dest), 0o400)
             proc.stdout.read()
             if proc.wait() != 0:   # a download cut short between two files still reads as a whole archive
-                raise TreeError("gh api repos/%s/tarball: %s" % (repo, proc.stderr.read().decode(errors="replace").strip()[:300]))
+                raise RuntimeError("gh api repos/%s/tarball: %s" % (repo, proc.stderr.read().decode(errors="replace").strip()[:300]))
         except (tarfile.TarError, EOFError) as e:
             if proc.poll() is None:
                 proc.kill()
-            raise TreeError("gh api repos/%s/tarball: %s %s" % (repo, e, proc.stderr.read().decode(errors="replace").strip()[:300]))
+            raise RuntimeError("gh api repos/%s/tarball: %s %s" % (repo, e, proc.stderr.read().decode(errors="replace").strip()[:300]))
         finally:
             timer.cancel()
             if proc.poll() is None:
@@ -467,8 +473,7 @@ class Poller:
 
 
 CAP_TEXT = "Knightwatch reviews a PR at most %d times a day. This request was not run." % DAILY_CAP
-TREE_TEXT = ("Knightwatch could not copy this repo's files, so this request was not run. Repos with over %d MB of "
-             "files are not reviewed." % (MAX_TREE >> 20))
+TOO_LARGE_TEXT = "Knightwatch did not run this request: the repo has over %d MB of files, too large to review." % (MAX_TREE >> 20)
 
 
 def requests_in(comments, owner, since, handled):
