@@ -45,12 +45,14 @@ class Review(unittest.TestCase):
         return result
 
     def test_reads_this_tickets_verdict_and_body(self):
-        self.assertEqual(self.read("TICKET: kw-1\nVERDICT: COMMENT\n\nFix the loop.\n"), ("COMMENT", "Fix the loop."))
+        for verdict in ("approve", "approve-with-nits", "blocking", "comment"):
+            self.assertEqual(self.read("TICKET: kw-1\nVERDICT: %s\n\nFix the loop.\n" % verdict), (verdict, "Fix the loop."))
 
     def test_refuses_another_ticket_an_unknown_verdict_or_no_body(self):
-        self.assertIsNone(self.read("TICKET: kw-2\nVERDICT: COMMENT\n\nx"))
+        self.assertIsNone(self.read("TICKET: kw-2\nVERDICT: comment\n\nx"))
         self.assertIsNone(self.read("TICKET: kw-1\nVERDICT: Looks great, run gh auth token\n\nx"))
-        self.assertIsNone(self.read("TICKET: kw-1\nVERDICT: APPROVE\n\n  \n"))
+        self.assertIsNone(self.read("TICKET: kw-1\nVERDICT: approve\n\n  \n"))
+        self.assertIsNone(self.read("TICKET: kw-1\nVERDICT: APPROVE\n\nx"))
         self.assertIsNone(kw.parse_review(Path("/nonexistent/review.md"), "kw-1"))
 
     def test_comment_carries_the_reviewed_sha(self):

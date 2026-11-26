@@ -9,15 +9,15 @@ posts it as one PR comment and tells the builder's kitchen.
     knightwatch-poll disable --company C          launchd stops it and won't start it again
     knightwatch-poll serve --company C            poll forever (what launchd runs)
 
-Config, state and log: ~/.local/share/knightwatch/<company>/. --dry-run posts nothing on GitHub and sends no builder
-notice: what it would post goes to dry-run/ there.
+Config, state and log: ~/.local/share/knightwatch/<company>/. --dry-run posts nothing on GitHub: what it would post
+goes to dry-run/ there.
 
 A review ticket's files go in tickets/<id>/: ticket.json, diff.patch, base/ and head/ (each changed file at the merge
 base and at the head), and config/ (REVIEW.md and .knightwatch/ from the base branch only). current.json (mode 600) holds
 {"ticket": id, "folder": path} while a review runs and {} otherwise. Knightwatch writes tickets/<id>/review.md:
 
     TICKET: <id>
-    VERDICT: APPROVE | COMMENT
+    VERDICT: approve | approve-with-nits | blocking | comment
 
     <the review>
 """
@@ -41,7 +41,7 @@ OWNERS_EVERY = 3600
 POINTS_PER_HOUR = 1000
 SEND_TRIES = 5
 DAILY_CAP = 5
-VERDICTS = ("APPROVE", "COMMENT")
+VERDICTS = ("approve", "approve-with-nits", "blocking", "comment")
 PUSH = ("admin", "maintain", "write")
 GH_TIMEOUT = 120
 SEARCH = """
@@ -396,9 +396,6 @@ class Poller:
     def deliver_notices(self):
         held = []
         for note in self.state["outbox"]:
-            if self.dry_run:
-                self.log("dry run: would tell the builder: %s" % note["text"])
-                continue
             try:
                 self.kitchen("--kitchen-id", self.cfg["builder"], "ticket", "sous", note["text"])
                 self.log("builder told: %s" % note["text"])
