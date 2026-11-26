@@ -26,5 +26,4 @@ this turn asks.
 
 When {{OWNER}} asks you to post in the Plow feedback room, its card goes
 under "Inbound asks": with none yet, create it in #general with
-`dangerously_create_goal: true`. On a machine with no `~/Plow/wiki/`, send
-with `dangerously_skip_citing_a_runbook: true`.
+`dangerously_create_goal: true`.
