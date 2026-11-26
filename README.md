@@ -4,7 +4,8 @@ Owner-neutral role templates for a [kitchen](https://github.com/srosro/kitchen)
 of Claude Code agents: an engineering sous and a chief of staff sous that run
 on their owner's machine and talk to people in Swarm.
 
-Each agent is a folder, `templates/eng/` or `templates/cos/`, holding what
+Each agent is a folder, `templates/eng/`, `templates/cos/` or `templates/base-agent/` (an
+agent the owner adds later, with a one-line job), holding what
 install.sh puts in that agent's folder: its `CLAUDE.md`, with these
 placeholders filled in, and its skills in `.claude/skills/`, copied as they are:
 
@@ -18,6 +19,7 @@ placeholders filled in, and its skills in `.claude/skills/`, copied as they are:
 | `{{ACCOUNT}}` | the sous's own Swarm account, `@name:server` |
 | `{{FIRST_RUN}}` | `survey` or `question`: how the chief of staff's first run starts (`cos/` only) |
 | `{{AGENT_NAME}}` | the agent's own first name |
+| `{{JOB}}` | an added agent's one-line job (`base-agent/` only) |
 
 Anyone in the company can direct an agent's actions inside the company: the
 agent looks up the sender's id in the `directory` tool and acts only for kind
