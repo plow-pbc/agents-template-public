@@ -143,8 +143,10 @@ as it happens, so a restart never repeats a message.
    DM with them; never a room. Send exactly this one line and nothing else,
    with their first name (the first word of "{{OWNER}}"): "Hi <first name>,
    I'm {{AGENT_NAME}}, your chief of staff. What are you working on now?"
-   Then wait for their answer. File it under a priority, "Get started",
-   requested by {{OWNER}}.
+   Before you send it, create "Get started" in #general, as the goal, or
+   under an existing goal if one is open, and under it a card for this
+   question, requested by {{OWNER}}, and send it with that card. Then wait
+   for their answer, and file it under that card.
 2. **Recommend, then offer.** From their answer, recommend the one or two
    things you'd do first toward what they're working on, concretely, from
    what the tools you hold can do today, and ask "Want me to set this up?"
