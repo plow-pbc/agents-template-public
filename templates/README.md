@@ -23,6 +23,7 @@ Placeholders install.sh fills in `CLAUDE.md`, in these exact formats:
   field of `swarm accounts add`'s JSON; for an added agent, the owner the server
   recorded for its account
 - `{{COMPANY}}`: the company's name
+- `{{ROOM}}`: the room the sous answers in, `#room:server`
 - `{{ACCOUNT}}`: the sous's own Swarm account, `@name:server`
 - `{{AGENT_NAME}}`: the agent's own first name
 - `{{JOB}}`: an added agent's job, the one line its owner gave it: plain words
