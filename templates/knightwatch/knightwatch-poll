@@ -298,7 +298,6 @@ class Poller:
                 if req["tries"] >= SEND_TRIES:
                     self.state["queue"].pop(0)
                 return
-            self.state["queue"].pop(0)
 
     def permission(self, repo, login):
         try:
@@ -330,6 +329,7 @@ class Poller:
             self.end(cur)
             raise
         self.state["current"] = cur
+        self.state["queue"].remove(req)
         key, today = "%s#%d" % (repo, n), time.strftime("%Y-%m-%d", time.gmtime())
         day = self.state["started"].get(key)
         if not day or day["day"] != today:
