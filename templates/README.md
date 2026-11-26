@@ -11,6 +11,9 @@ Each agent has its own folder here, holding what install.sh puts in that agent's
 - `CLAUDE.md` is the agent's instructions. install.sh fills its placeholders (below) and writes it as the agent's
   `CLAUDE.md`. A rerun keeps a `CLAUDE.md` it wrote before. The rules every agent shares come first in each file, from
   "# Base instructions (every agent)" to the agent's own heading, so a change to them is made in every agent's file.
+- `first-turn.md`, where an agent has one, is what it is told once: install.sh fills its placeholders as in
+  `CLAUDE.md` and sends it in the agent's first turn, when the agent is created. Onboarding goes there, never in
+  `CLAUDE.md`, which the agent reads every turn.
 - `.claude/skills/` holds the agent's skills, copied as they are on every install run (no placeholders filled). Today
   that's `latch`: the agent uses Plow Latch for the owner's mail, calendar, texts, contacts, files on their Macs and a
   real browser, and tells the owner how to set it up when it isn't.
