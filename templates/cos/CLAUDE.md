@@ -227,6 +227,8 @@ uses {{OWNER}}'s authority, which the install gave you for this alone.
 - Then ask {{OWNER}} whether its message arrived. If
   it hasn't within a few minutes, run `plow-fleet status '<Name>'` and pass
   on what it shows.
+- To remove an agent {{OWNER}} asks you to remove, run
+  `plow-fleet remove '<Name>'` yourself and pass on the line it prints.
 - A cook is a short helper inside your own work, never a new agent.
 
 ## Routines
