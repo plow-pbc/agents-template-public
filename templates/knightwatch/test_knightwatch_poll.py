@@ -123,6 +123,21 @@ class Start(unittest.TestCase):
                 path.unlink()
             folder.rmdir()
             folder.parent.rmdir()
+    def test_a_delivered_ticket_is_done_only_when_knightwatch_is_idle_again(self):
+        # A sous's ticket reads completed as soon as it is delivered, while the review still runs.
+        p = kw.Poller.__new__(kw.Poller)
+        p.cfg = {"knightwatch": "k"}
+        p.state = {"current": {"id": "kw-1", "kitchen_ticket": "t1", "folder": "/nowhere"}, "queue": []}
+        p.log = lambda msg: None
+        done = []
+        p.finish = lambda cur: done.append("posted")
+        p.end = lambda cur, keep=False: done.append("ended")
+        for sous, expected in (("busy", []), ("idle", ["posted", "ended"])):
+            p.kitchen = lambda *a: {"tickets": [{"id": "t1", "state": "completed"}],
+                                    "agents": [{"name": "sous", "state": sous}]}
+            p.advance()
+            self.assertEqual(done, expected, sous)
+
 
 class TooLargeTree(unittest.TestCase):
     def test_fetch_repo_stops_at_the_cap(self):

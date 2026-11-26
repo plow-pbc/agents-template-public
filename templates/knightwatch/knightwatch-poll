@@ -198,10 +198,12 @@ class Poller:
         raise RuntimeError("Knightwatch did not come back to an empty prompt after /clear")
 
     def ticket_state(self, ticket):
-        for t in self.kitchen("--kitchen-id", self.cfg["knightwatch"], "status", "--metadata").get("tickets") or []:
-            if t.get("id") == ticket:
-                return t.get("state")
-        return None
+        """The ticket's state in Knightwatch's kitchen. A sous's ticket reads completed as soon as it is delivered,
+        so it is done only once the sous is idle again, its final report given."""
+        status = self.kitchen("--kitchen-id", self.cfg["knightwatch"], "status", "--metadata")
+        state = next((t.get("state") for t in status.get("tickets") or [] if t.get("id") == ticket), None)
+        sous = next((a for a in status.get("agents") or [] if a.get("name") == "sous"), {})
+        return "running" if state == "completed" and sous.get("state") != "idle" else state
 
     # ------------------------------------------------------------ one poll
     def poll(self):
