@@ -1,5 +1,4 @@
 """python3 -m unittest discover tests (from the repo root): each agent's latch sign-in script, run on a fake latch."""
-import os
 import stat
 import subprocess
 import tempfile
@@ -77,21 +76,18 @@ class SignIn(unittest.TestCase):
         self.assertEqual(set(calls[1:]), {"status --local"})
         self.assertEqual(len(calls) - 1, 900)  # every 2 seconds for 30 minutes, as long as a login code lasts
 
-    def test_a_code_to_text_when_the_app_does_not_open(self):
-        code, out, calls = self.run_sign_in(MACOS="26.1", APP="fails")
-        self.assertEqual(code, 0)
-        self.assertEqual(calls, ["app", "login --events"])
-        self.assertIn('"type":"code"', out[1])
-        self.assertEqual(out[-1], '{"type":"verified","peer":{"name":"studio"}}')
-
-    def test_a_code_to_text_where_the_window_cannot_run(self):
-        for macos in ["15.7", "13.0", ""]:  # before macOS 26 the app only says so and quits; "" is not a Mac
-            with self.subTest(macos=macos):
+    def test_a_code_to_text_where_the_app_cannot_open(self):
+        # Before macOS 26 the app only says so and quits; "" is not a Mac.
+        text = ["login --events"]
+        for macos, app, expected in [("26.1", "fails", ["app"] + text), ("15.7", "opens", text),
+                                     ("13.0", "opens", text), ("", "opens", text)]:
+            with self.subTest(macos=macos, app=app):
                 (self.fake / "calls").unlink(missing_ok=True)
-                code, out, calls = self.run_sign_in(MACOS=macos, APP="opens")
+                code, out, calls = self.run_sign_in(MACOS=macos, APP=app)
                 self.assertEqual(code, 0)
-                self.assertEqual(calls, ["login --events"])
+                self.assertEqual(calls, expected)
                 self.assertIn('"type":"code"', out[1])
+                self.assertEqual(out[-1], '{"type":"verified","peer":{"name":"studio"}}')
 
     def test_every_agent_has_the_same_script(self):
         scripts = {(TEMPLATES / a / ".claude" / "skills" / "latch" / "sign-in").read_bytes() for a in AGENTS}
