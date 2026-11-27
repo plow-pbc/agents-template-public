@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+"""PreToolUse allow-list for the Knightwatch agent and its subagents.
+
+It reads the current ticket from ~/.local/share/knightwatch/<company>/current.json, which only the poller writes
+(<company> comes from this agent's .claude/knightwatch.json). A tool call is allowed only if it is one of:
+
+  Read, Grep, Glob      inside the current ticket's folder
+  Write                 the folder's review.md, or a notes file: notes/<name>.md
+  Skill                 knightwatch-review
+  Agent                 one of the Knightwatch subagents, without isolation or run_in_background (main session only)
+
+Anything else is denied, and so is everything when no review is running. Every decision is logged to hook.log
+beside current.json.
+"""
+import json
+import os
+import re
+import sys
+import time
+
+SUBAGENTS = {"kw-specialist", "kw-critic"}
+SKILL = "knightwatch-review"
+NOTE = re.compile(r"[a-z0-9][a-z0-9-]{0,60}\.md")
+
+
+def state_home():
+    agent = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+    with open(os.path.join(agent, ".claude", "knightwatch.json")) as f:
+        company = json.load(f)["company"]
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", company) or company.startswith("."):
+        raise ValueError("bad company %r" % company)
+    return os.path.join(os.path.expanduser("~"), ".local", "share", "knightwatch", company)
+
+
+def current_folder(home):
+    """The current ticket's folder, resolved, or None when no review is running."""
+    try:
+        with open(os.path.join(home, "current.json")) as f:
+            cur = json.load(f)
+    except (OSError, ValueError):
+        return None, None
+    ticket, folder = cur.get("ticket"), cur.get("folder")
+    if not ticket or not folder:
+        return None, None
+    tickets = os.path.realpath(os.path.join(home, "tickets"))
+    folder = os.path.realpath(folder)
+    if os.path.dirname(folder) != tickets or os.path.basename(folder) != ticket or not os.path.isdir(folder):
+        return ticket, None
+    return ticket, folder
+
+
+def inside(path, folder, cwd):
+    if not isinstance(path, str) or not path or "\0" in path:
+        return False
+    if not os.path.isabs(path):
+        path = os.path.join(cwd or "", path)
+    real = os.path.realpath(path)
+    return real == folder or real.startswith(folder + os.sep)
+
+
+def safe_pattern(pattern):
+    return isinstance(pattern, str) and not pattern.startswith(("/", "~")) and ".." not in pattern.split("/")
+
+
+def decide(event, folder):
+    """(allow, reason) for one PreToolUse event."""
+    tool, args = event.get("tool_name", ""), event.get("tool_input") or {}
+    cwd, sub = event.get("cwd"), bool(event.get("agent_id"))
+    if folder is None:
+        return False, "no Knightwatch review is running"
+    if tool == "Read":
+        return inside(args.get("file_path"), folder, cwd), "Read only inside the ticket folder"
+    if tool in ("Grep", "Glob"):
+        path = args.get("path")
+        if not path:
+            return False, "%s needs a path inside the ticket folder" % tool
+        patterns = [args.get("pattern")] if tool == "Glob" else ([args["glob"]] if args.get("glob") else [])
+        ok = inside(path, folder, cwd) and all(safe_pattern(p) for p in patterns)
+        return ok, "%s only inside the ticket folder" % tool
+    if tool == "Write":
+        target = args.get("file_path")
+        if not isinstance(target, str) or not os.path.isabs(target):
+            return False, "Write needs an absolute path"
+        real = os.path.realpath(target)
+        ok = real == os.path.join(folder, "review.md") or (
+            os.path.dirname(real) == os.path.join(folder, "notes") and NOTE.fullmatch(os.path.basename(real)) is not None)
+        return ok, "Write only to review.md or notes/<name>.md in the ticket folder"
+    if tool == "Skill":
+        return (not sub and args.get("skill") == SKILL), "only the %s skill" % SKILL
+    if tool in ("Agent", "Task"):
+        ok = (not sub and args.get("subagent_type") in SUBAGENTS and not args.get("isolation")
+              and not args.get("run_in_background"))
+        return ok, "only Knightwatch subagents, in the foreground, without isolation"
+    return False, "%s is not allowed for Knightwatch" % (tool or "this tool")
+
+
+def log(home, event, ticket, allow, reason):
+    args = event.get("tool_input") or {}
+    target = next((args[k] for k in ("file_path", "path", "pattern", "skill", "subagent_type", "command", "url") if args.get(k)), "")
+    line = "%s %s %s %s %s %s%s\n" % (time.strftime("%Y-%m-%dT%H:%M:%S"), ticket or "-", event.get("agent_type") or "main",
+                                      "allow" if allow else "deny", event.get("tool_name", "?"), str(target)[:200].replace("\n", " "),
+                                      "" if allow else " (%s)" % reason)
+    fd = os.open(os.path.join(home, "hook.log"), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    with os.fdopen(fd, "a") as f:
+        f.write(line)
+
+
+def answer(allow, reason):
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+                                             "permissionDecision": "allow" if allow else "deny",
+                                             "permissionDecisionReason": reason}}))
+
+
+def main():
+    try:
+        event = json.load(sys.stdin)
+        home = state_home()
+        ticket, folder = current_folder(home)
+        allow, reason = decide(event, folder)
+    except Exception as e:   # fail closed
+        print("Knightwatch allow-list error: %s" % e, file=sys.stderr)
+        answer(False, "Knightwatch allow-list error")
+        return 2
+    try:
+        log(home, event, ticket, allow, reason)
+    except OSError:
+        pass
+    answer(allow, reason)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

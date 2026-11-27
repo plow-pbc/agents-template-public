@@ -7,6 +7,7 @@ Each agent has its own folder here, holding what install.sh puts in that agent's
 | Engineering | `eng/` |
 | Chief of staff | `cos/` |
 | An agent the owner added later, with a one-line job | `base-agent/` |
+| Knightwatch, the PR reviewer | `knightwatch/` |
 
 - `CLAUDE.md` is the agent's instructions. install.sh fills its placeholders (below) and writes it as the agent's
   `CLAUDE.md`. A rerun keeps a `CLAUDE.md` it wrote before. The rules every agent shares come first in each file, from
@@ -17,6 +18,10 @@ Each agent has its own folder here, holding what install.sh puts in that agent's
 - `.claude/skills/` holds the agent's skills, copied as they are on every install run (no placeholders filled). Today
   that's `latch`: the agent uses Plow Latch for the owner's mail, calendar, texts, contacts, files on their Macs and a
   real browser, and tells the owner how to set it up when it isn't.
+- `knightwatch/` is copied whole: no base instructions and no placeholders, since it has no Swarm account. Its
+  `.claude/hooks/kw-allow` lets it read only the current review's ticket folder, found through
+  `.claude/knightwatch.json` (`{"company": "<the poller's company>"}`), written at install. Without that file
+  every tool call is refused.
 
 Placeholders install.sh fills in `CLAUDE.md`, in these exact formats:
 
