@@ -19,19 +19,24 @@ First check that it is set up here:
   - **They say yes:** that yes, from your owner's own id, is their approval to install on their Mac; never install
     without it. Run `curl -fsSLO https://releases.plow.co/latch-cli/install.sh && sh install.sh` yourself. Then start
     `latch setup`: `latch setup --status` lists each step and the command that does it. Run the steps yourself. To
-    sign in, run `latch login --events`, which needs no terminal. Its `code` line gives the `code`, the number to text
-    it to (`send_to_display`) and an `sms_link` that opens Messages with both filled in. Texting that code is your
-    owner's one step: tell them once, complete, where they are talking to you.
-    - **In your DM with them:** "Last step, on your phone: text <code> to <send_to_display>. Or tap this, which opens
-      Messages with it filled in: <sms_link>"
-    - **In a group room:** the code never goes there. Send the DM message above first. Then say in the room: "Last
-      step, on your phone: text the code I just sent you in a direct message (<where>) to <send_to_display>." For
-      <where>, give the `link` your send's result gave for that DM; with none, "Plow → Direct messages → <your
-      name>". Never write a mention or a name as a link.
+    sign in, run `sh .claude/skills/latch/sign-in` from your folder, in the background: it opens Plow Latch on their
+    Mac, whose window shows a QR code to scan, and runs `latch login --events` instead where the window can't open.
+    It prints one JSON line per step. Signing in is your owner's one step: tell them once, complete, where they are
+    talking to you.
+    - **An `app` line:** "Last step: Plow Latch just opened on your Mac. Click Get started if you see it, then scan
+      its QR code with your phone's camera and send the text that opens."
+    - **A `code` line** gives the `code`, the number to text it to (`send_to_display`) and an `sms_link` that opens
+      Messages with both filled in.
+      - **In your DM with them:** "Last step, on your phone: text <code> to <send_to_display>. Or tap this, which
+        opens Messages with it filled in: <sms_link>"
+      - **In a group room:** the code never goes there. Send the DM message above first. Then say in the room:
+        "Last step, on your phone: text the code I just sent you in a direct message (<where>) to
+        <send_to_display>." For <where>, give the `link` your send's result gave for that DM; with none, "Plow →
+        Direct messages → <your name>". Never write a mention or a name as a link.
     - **Then:** when its `verified` line comes, or `latch status` shows this Mac logged in, tell them Latch works.
   - **They say no:** drop it.
-- **It's installed but this Mac isn't logged in:** tell your owner the same, and that running `latch setup` in a
-  terminal logs this Mac in (they text a code from their phone). Then carry on without it.
+- **It's installed but this Mac isn't logged in:** tell your owner the same, and ask whether to sign this Mac in. On
+  their yes, sign in as above. Then carry on without it.
 
 Tell them once, not on every task. A code you read through Plow Latch, such as a sign-in or verification code, goes to
 your owner by direct message only.
