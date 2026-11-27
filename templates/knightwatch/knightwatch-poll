@@ -12,8 +12,8 @@ posts it as one PR comment and tells the builder's kitchen.
 Config, state and log: ~/.local/share/knightwatch/<company>/. --dry-run posts nothing on GitHub: what it would post
 goes to dry-run/ there.
 
-A review ticket's files go in tickets/<id>/: ticket.json, diff.patch, base/ (the whole repo at the merge base, read-only;
-a repo with over MAX_TREE bytes of files gets no review, only a reply saying so), head/ (each changed file at the head), and config/ (REVIEW.md from the base branch's tip). current.json (mode 600) holds
+A review ticket's files go in tickets/<id>/: ticket.json, diff.patch, base/ (the whole repo at the merge base, read-only),
+head/ (each changed file at the head), and config/ (REVIEW.md from the base branch's tip). current.json (mode 600) holds
 {"ticket": id, "folder": path} while a review runs and {} otherwise. Knightwatch writes tickets/<id>/review.md:
 
     TICKET: <id>
@@ -43,11 +43,9 @@ OWNERS_EVERY = 3600
 # this budget is skipped.
 POINTS_PER_HOUR = 1000
 SEND_TRIES = 5
-DAILY_CAP = 5
 VERDICTS = ("approve", "approve-with-nits", "blocking", "comment")
 PUSH = ("admin", "maintain", "write")
 GH_TIMEOUT = 120
-MAX_TREE = 500 * 2**20
 TARBALL_TIMEOUT = 600
 SEARCH = """
 query($q: String!, $after: String) {
@@ -69,10 +67,6 @@ class NotFound(RuntimeError):
     pass
 
 
-class TooLarge(RuntimeError):
-    """The base tree has more than MAX_TREE bytes of files."""
-
-
 def now_iso():
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
@@ -87,8 +81,7 @@ class Poller:
             self.state = json.loads((self.home / "state.json").read_text())
         except (OSError, ValueError):
             self.state = {}
-        for key, empty in (("handled", []), ("queue", []), ("prs", {}), ("started", {}), ("replied", {}), ("points", []),
-                           ("outbox", [])):
+        for key, empty in (("handled", []), ("queue", []), ("prs", {}), ("points", []), ("outbox", [])):
             self.state.setdefault(key, empty)
 
     def log(self, msg):
@@ -283,16 +276,6 @@ class Poller:
                 self.log("%s: %s has %s access, not push: no review" % (key, req["requester"], access))
                 self.state["queue"].pop(0)
                 continue
-            day = self.state["started"].get(key)
-            if day and day["day"] == time.strftime("%Y-%m-%d", time.gmtime()) and day["count"] >= DAILY_CAP:
-                try:
-                    self.reply_once(req, "cap", CAP_TEXT)
-                except RuntimeError as e:
-                    self.log("cap reply %s: %s" % (key, e))
-                    return
-                self.state["queue"].pop(0)
-                self.log("%s: %d reviews today already: no review" % (key, DAILY_CAP))
-                continue
             try:
                 if not self.knightwatch_idle():
                     return
@@ -302,27 +285,12 @@ class Poller:
             req["access"] = access
             try:
                 self.start(req)
-            except TooLarge as e:   # it won't fit on a retry either
-                self.state["queue"].pop(0)
-                self.log("%s: %s: no review" % (key, e))
-                try:
-                    self.reply_once(req, "too-large", TOO_LARGE_TEXT)
-                except RuntimeError as e:
-                    self.log("too-large reply %s: %s" % (key, e))
-                continue
             except Exception as e:
                 req["tries"] += 1
                 self.log("ticket %s: %s (try %d of %d)" % (key, e, req["tries"], SEND_TRIES))
                 if req["tries"] >= SEND_TRIES:
                     self.state["queue"].pop(0)
                 return
-
-    def reply_once(self, req, kind, text):
-        """Posts text on the request's PR at most once a day per PR for each kind of reply."""
-        key, today = "%s#%d %s" % (req["repo"], req["pr"], kind), time.strftime("%Y-%m-%d", time.gmtime())
-        if self.state["replied"].get(key) != today:
-            self.post(req["repo"], req["pr"], text)
-            self.state["replied"][key] = today
 
     def permission(self, repo, login):
         try:
@@ -357,14 +325,9 @@ class Poller:
             raise
         self.state["current"] = cur
         self.state["queue"].remove(req)
-        key, today = "%s#%d" % (repo, n), time.strftime("%Y-%m-%d", time.gmtime())
-        day = self.state["started"].get(key)
-        if not day or day["day"] != today:
-            day = self.state["started"][key] = {"day": today, "count": 0}
-        day["count"] += 1
         self.save()
-        self.log("%s: ticket %s (kitchen ticket %s) for %s (%s access) at %s" % (
-            key, cur["id"], cur["kitchen_ticket"], req["url"], req["access"], cur["sha"][:7]))
+        self.log("%s#%d: ticket %s (kitchen ticket %s) for %s (%s access) at %s" % (
+            repo, n, cur["id"], cur["kitchen_ticket"], req["url"], req["access"], cur["sha"][:7]))
 
     def comparison(self, repo, n):
         """(head, base branch tip, merge base) of the PR now."""
@@ -388,16 +351,12 @@ class Poller:
         with subprocess.Popen(["gh", "api", "repos/%s/tarball/%s" % (repo, sha)], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
             timer = threading.Timer(TARBALL_TIMEOUT, proc.kill)
             timer.start()
-            total = 0
             try:
                 with tarfile.open(fileobj=proc.stdout, mode="r|gz") as tar:
                     for m in tar:
                         path = m.name.partition("/")[2]   # below the archive's own top folder
                         if not (m.isfile() and path):
                             continue
-                        total += m.size
-                        if total > MAX_TREE:
-                            raise TooLarge("%s at %s has over %d MB of files" % (repo, sha[:7], MAX_TREE >> 20))
                         dest = inside(root, path)
                         dest.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
                         with tar.extractfile(m) as src, open(str(dest), "wb") as out:
@@ -467,9 +426,6 @@ class Poller:
                     held.append(note)
         self.state["outbox"] = held
 
-
-CAP_TEXT = "Knightwatch reviews a PR at most %d times a day. This request was not run." % DAILY_CAP
-TOO_LARGE_TEXT = "Knightwatch did not run this request: the repo has over %d MB of files, too large to review." % (MAX_TREE >> 20)
 
 
 def requests_in(comments, owner, since, handled):

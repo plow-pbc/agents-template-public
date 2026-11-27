@@ -107,7 +107,7 @@ class Start(unittest.TestCase):
             p = kw.Poller.__new__(kw.Poller)
             p.home, p.cfg, p.dry_run = Path(d), {"knightwatch": "k"}, True
             req = {"comment": 1, "repo": "o/r", "pr": 1, "requester": "dev", "url": "u", "tries": 0, "access": "write"}
-            p.state = {"queue": [req], "started": {}, "current": None}
+            p.state = {"queue": [req], "current": None}
             p.gh = lambda *a, **k: {"head": {"sha": "h" * 40}, "base": {"ref": "main"},
                                     "base_commit": {"sha": "b" * 40}, "merge_base_commit": {"sha": "m" * 40}}
             p.fetch = lambda cur, folder: None
@@ -143,7 +143,7 @@ class Start(unittest.TestCase):
             p = kw.Poller.__new__(kw.Poller)
             p.home, p.cfg, p.dry_run = Path(d), {"knightwatch": "k"}, True
             req = {"comment": 1, "repo": "o/r", "pr": 1, "requester": "dev", "url": "u", "tries": 0, "access": "write"}
-            p.state = {"queue": [req], "started": {}, "current": None}
+            p.state = {"queue": [req], "current": None}
             calls = []
 
             def gh(*args, **kwargs):
@@ -167,41 +167,68 @@ class Start(unittest.TestCase):
             (Path(d) / "tickets").rmdir()
 
 
-class TooLargeTree(unittest.TestCase):
-    def test_fetch_repo_stops_at_the_cap(self):
+class Zeros(io.RawIOBase):
+    """n zero bytes, read as a file."""
+    def __init__(self, n):
+        self.n = n
+
+    def readable(self):
+        return True
+
+    def readinto(self, b):
+        k = min(len(b), self.n)
+        b[:k] = bytes(k)
+        self.n -= k
+        return k
+
+
+class NoLimits(unittest.TestCase):
+    def test_a_sixth_request_on_a_pr_the_same_day_gets_a_review(self):
+        with scratch() as d, mock.patch.object(kw.Path, "home", return_value=Path(d)):
+            home = Path(d) / ".local" / "share" / "knightwatch" / "c"
+            home.mkdir(parents=True)
+            (home / "config.json").write_text(json.dumps({"owner": "o", "knightwatch": "k", "builder": "b", "dry_run": True}))
+            p = kw.Poller("c")
+            p.log = lambda msg: None
+            p.permission = lambda repo, login: "write"
+            p.knightwatch_idle = lambda: True
+            p.comparison = lambda repo, n: ("h" * 40, "b" * 40, "m" * 40)
+            p.fetch = lambda cur, folder: None
+            p.clear_knightwatch = lambda: None
+            p.finish = lambda cur: None
+            sent, posts = [], []
+
+            def kitchen(*args):
+                if "ticket" in args:
+                    sent.append(args)
+                    return {"ticket": "t%d" % len(sent)}
+                return {"tickets": [{"id": "t%d" % len(sent), "state": "completed"}], "agents": [{"name": "sous", "state": "idle"}]}
+            p.kitchen = kitchen
+            p.post = lambda repo, n, body: posts.append(body)
+            p.state["queue"] = [{"comment": i, "repo": "o/r", "pr": 1, "requester": "dev", "url": "u", "tries": 0} for i in range(6)]
+            for _ in range(7):   # each pass ends the review before and starts the next
+                p.advance()
+            self.assertEqual((len(sent), posts), (6, []))
+            for name in ("config.json", "state.json", "current.json"):
+                (home / name).unlink()
+            for path in (home / "tickets", home, home.parent, home.parent.parent, home.parent.parent.parent):
+                path.rmdir()
+
+    def test_a_repo_over_500_mb_is_copied_whole(self):
         with scratch() as d:
             archive = Path(d) / "tree.tar.gz"
-            with tarfile.open(str(archive), "w:gz") as tar:
-                for name in ("o-r-s/a.py", "o-r-s/b.py"):
-                    info = tarfile.TarInfo(name)
-                    info.size = 60
-                    tar.addfile(info, io.BytesIO(b"x" * 60))
+            with tarfile.open(str(archive), "w:gz", compresslevel=1) as tar:
+                info = tarfile.TarInfo("o-r-s/big.bin")
+                info.size = 501 * 2**20
+                tar.addfile(info, Zeros(info.size))
             popen = kw.subprocess.Popen
-            with mock.patch.object(kw.subprocess, "Popen", lambda args, **k: popen(["cat", str(archive)], **k)), \
-                    mock.patch.object(kw, "MAX_TREE", 100):
-                with self.assertRaises(kw.TooLarge):
-                    kw.Poller.__new__(kw.Poller).fetch_repo("o/r", "s" * 40, Path(d) / "base")
-            for path in (Path(d) / "base" / "a.py", archive):
+            with mock.patch.object(kw.subprocess, "Popen", lambda args, **k: popen(["cat", str(archive)], **k)):
+                kw.Poller.__new__(kw.Poller).fetch_repo("o/r", "s" * 40, Path(d) / "base")
+            big = Path(d) / "base" / "big.bin"
+            self.assertEqual(big.stat().st_size, 501 * 2**20)
+            for path in (big, archive):
                 path.unlink()
             (Path(d) / "base").rmdir()
-
-    def test_a_request_over_the_cap_is_dropped_with_one_reply_a_day(self):
-        p = kw.Poller.__new__(kw.Poller)
-        req = {"comment": 1, "repo": "o/r", "pr": 1, "requester": "dev", "url": "u", "tries": 0}
-        p.state = {"queue": [req, dict(req, comment=2)], "started": {}, "replied": {}, "current": None}
-        p.permission = lambda repo, login: "write"
-        p.knightwatch_idle = lambda: True
-        p.log = lambda msg: None
-        posts = []
-        p.post = lambda repo, n, body: posts.append((repo, n, body))
-
-        def start(req):
-            raise kw.TooLarge("o/r at sssssss has over 500 MB of files")
-        p.start = start
-        p.advance()
-        self.assertEqual(p.state["queue"], [])
-        self.assertEqual(posts, [("o/r", 1, kw.TOO_LARGE_TEXT)])
-
 
 if __name__ == "__main__":
     unittest.main()
