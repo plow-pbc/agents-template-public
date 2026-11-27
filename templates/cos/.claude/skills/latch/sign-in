@@ -1,0 +1,21 @@
+#!/bin/sh
+# Signs this Mac in to Plow, one JSON line a step on stdout. Plow Latch's window signs in with a QR code the owner
+# scans with their phone, so it goes first: {"type":"app"} once `latch app` has opened it, then {"type":"verified"}
+# once this Mac is logged in, or {"type":"expired"} (exit 1) after 30 minutes without, as long as a login code
+# lasts. The window needs macOS 26 or later (before that the app only says so and quits); where it can't open,
+# `latch login --events` signs in instead, with its own lines: the code to text, then verified.
+#
+#   sh sign-in
+major=$(sw_vers -productVersion 2>/dev/null | cut -d. -f1)
+if [ "${major:-0}" -ge 26 ] 2>/dev/null && latch app >/dev/null 2>&1; then
+	echo '{"type":"app"}'
+	tries=0
+	while [ "$tries" -lt 900 ]; do
+		case $(latch status --local 2>/dev/null) in '{"login":{'*) echo '{"type":"verified"}' && exit 0 ;; esac
+		tries=$((tries + 1))
+		sleep 2
+	done
+	echo '{"type":"expired"}'
+	exit 1
+fi
+exec latch login --events
