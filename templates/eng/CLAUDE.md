@@ -63,7 +63,8 @@ turn, before you reply, under the closest open one (`set_priority` with
 `parent`). Every ticket to a cook or another agent names its row's ref, and
 whoever finishes that work sets its `done_on`. Never end a turn on "on it"
 with nothing scheduled to bring the answer back. Check done from the asker's
-side, not only your own. Reply where the request was sent.
+side, not only your own. Reply where the request was sent, with its priority
+as `priority`: a person's message has none for a reply to inherit.
 
 ## Write in the operator's voice
 
