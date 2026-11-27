@@ -138,6 +138,34 @@ class Start(unittest.TestCase):
             p.advance()
             self.assertEqual(done, expected, sous)
 
+    def test_a_pr_whose_base_moved_while_it_was_fetched_gets_no_ticket(self):
+        with scratch() as d:
+            p = kw.Poller.__new__(kw.Poller)
+            p.home, p.cfg, p.dry_run = Path(d), {"knightwatch": "k"}, True
+            req = {"comment": 1, "repo": "o/r", "pr": 1, "requester": "dev", "url": "u", "tries": 0, "access": "write"}
+            p.state = {"queue": [req], "started": {}, "current": None}
+            calls = []
+
+            def gh(*args, **kwargs):
+                calls.append(args)
+                merge_base = "m" * 40 if len(calls) <= 2 else "n" * 40   # the base moved after the first look
+                return {"head": {"sha": "h" * 40}, "base": {"ref": "main"},
+                        "base_commit": {"sha": "b" * 40}, "merge_base_commit": {"sha": merge_base}}
+            p.gh = gh
+            p.fetch = lambda cur, folder: None
+            p.clear_knightwatch = lambda: None
+            sent = []
+            p.kitchen = lambda *a: sent.append(a) or {"ticket": "t1"}
+            p.log = lambda msg: None
+            with self.assertRaises(RuntimeError):
+                p.start(req)
+            self.assertEqual(sent, [])
+            self.assertEqual(p.state["queue"], [req])
+            self.assertEqual(list((Path(d) / "tickets").iterdir()), [])
+            for path in (Path(d) / "current.json", Path(d) / "state.json"):
+                path.unlink()
+            (Path(d) / "tickets").rmdir()
+
 
 class TooLargeTree(unittest.TestCase):
     def test_fetch_repo_stops_at_the_cap(self):
