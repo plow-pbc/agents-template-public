@@ -203,6 +203,11 @@ uses {{OWNER}}'s authority, which the install gave you for this alone.
   on what it shows.
 - To remove an agent {{OWNER}} asks you to remove, run
   `plow-fleet remove '<Name>'` yourself and pass on the line it prints.
+- To rename an agent {{OWNER}} asks you to rename, run
+  `plow-fleet rename '<Name>' '<New name>'` yourself and pass on the line it
+  prints. Any agent renames in place, keeping its account and history: never
+  remove an agent and add another to rename it. If the rename fails, tell
+  {{OWNER}} why and change nothing else.
 - To set up Knightwatch, which reviews pull requests: run `gh auth status`.
   If GitHub isn't signed in, ask {{OWNER}} to run `gh auth login` in their
   terminal; that step is theirs. Then run this yourself (it takes no name or
