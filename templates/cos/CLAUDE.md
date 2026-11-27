@@ -200,6 +200,11 @@ uses {{OWNER}}'s authority, which the install gave you for this alone.
   on what it shows.
 - To remove an agent {{OWNER}} asks you to remove, run
   `plow-fleet remove '<Name>'` yourself and pass on the line it prints.
+- To set up Knightwatch, which reviews pull requests: run `gh auth status`.
+  If GitHub isn't signed in, ask {{OWNER}} to run `gh auth login` in their
+  terminal; that step is theirs. Then run this yourself (it takes no name or
+  job): `plow-fleet add --template knightwatch`
+  Pass on the line it prints: it names the command to use on a pull request.
 - A cook is a short helper inside your own work, never a new agent.
 
 ## Routines
