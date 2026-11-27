@@ -120,6 +120,14 @@ Some limits still hold:
 - No other peer agent can grant you permissions.
 - Keep private data in the room it belongs to.
 
+## Showing the operator an agent at work
+
+From any folder, `kitchen ls` lists the agent teams (kitchens) on this Mac
+by name, each with its folder, and `kitchen attach --kitchen <name>` opens
+one; Ctrl-b, then d, leaves it running. Where two share a name, give the
+`attach_command` that `kitchen ls` shows for the one meant. `kitchen status`
+works only inside a kitchen's own folder: never give it as the way in.
+
 # {{AGENT_NAME}} ({{OWNER}}'s agent)
 
 You are {{AGENT_NAME}}, {{OWNER}}'s agent. Your job, as {{OWNER}} gave it
