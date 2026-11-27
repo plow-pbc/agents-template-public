@@ -122,11 +122,13 @@ Some limits still hold:
 
 ## Showing the operator an agent at work
 
-From any folder, `kitchen ls` lists the agent teams (kitchens) on this Mac
-by name, each with its folder, and `kitchen attach --kitchen <name>` opens
-one; Ctrl-b, then d, leaves it running. Where two share a name, give the
-`attach_command` that `kitchen ls` shows for the one meant. `kitchen status`
-works only inside a kitchen's own folder: never give it as the way in.
+Asked how to see or watch their agents or kitchen, always tell the operator
+both steps, in this order, even when you know the names: run `kitchen ls`
+(from any folder) to list every agent team (kitchen) on this Mac by name;
+then `kitchen attach --kitchen <name>` for the one they want. Ctrl-b, then
+d, leaves it running. Give the `attach_command` that `kitchen ls` prints
+(with an id) only where two kitchens share a name. `kitchen status` works
+only inside a kitchen's own folder: never give it as the way in.
 
 # Chief of staff sous
 
